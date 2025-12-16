@@ -182,20 +182,70 @@ function resetSketch() {
   selectedImage = null;
   redraw();
 }
+function revealRandomImageByCategory(category) {
+  let availableImages = [];
 
-// ---------- IFRAME MESSAGES ----------
-window.addEventListener("message", (event) => {
-  if (!event.data) return;
+  if (category === "BED") {
+    availableImages = bedImages;
+  } else if (category === "FLOOR") {
+    availableImages = floorImages;
+  } else if (category === "FURNITURE") {
+    availableImages = [...furnitureImages, ...frameImages];
+  } else if (category === "WINDOW") {
+    availableImages = otherImages.windows;
+  }
 
-  if (event.data.type === "RESET") {
+  // Prevent duplicates
+  availableImages = availableImages.filter(
+    img => !draggableImages.some(d => d.img === img)
+  );
+
+  // Only one bed
+  if (category === "BED" &&
+      draggableImages.some(d => bedImages.includes(d.img))) {
+    return;
+  }
+
+  if (availableImages.length === 0) return;
+
+  const img = random(availableImages);
+  const aspect = img.height / img.width;
+
+  const baseWidth = 120;
+  const baseHeight = baseWidth * aspect;
+
+  let x = random(50, width - baseWidth);
+  let y = random(10, height - baseHeight);
+
+  if (floorImages.includes(img)) {
+    y = random(dividerY + 10, height - baseHeight);
+  }
+
+  if (wallpaperImages.includes(img)) {
+    y = random(10, dividerY - baseHeight);
+  }
+
+  draggableImages.push({
+    img
+
+
+window.addEventListener("message", (e) => {
+  if (!e.data || !e.data.type) return;
+
+  const type = e.data.type;
+
+  if (type === "RESET") {
     resetSketch();
+    return;
   }
 
-  if (event.data.type === "DOWNLOAD") {
-    saveCanvas("take-my-mess", "png");
+  if (type === "DOWNLOAD") {
+    downloadSketch();
+    return;
   }
 
-  if (event.data.type === "REVEAL") {
-    revealRandomImage();
+  // Category-based reveal
+  if (["BED", "FLOOR", "FURNITURE", "WINDOW"].includes(type)) {
+    revealRandomImageByCategory(type);
   }
 });
