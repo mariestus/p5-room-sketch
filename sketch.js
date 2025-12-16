@@ -4,66 +4,74 @@ let frameImages = [];
 let furnitureImages = [];
 let bedImages = [];
 
-let otherImages = {};
+let otherImages = { windows: [] };
 let draggableImages = [];
 
 let selectedImage = null;
-let offsetX = 0;
-let offsetY = 0;
+let offsetX = 0, offsetY = 0;
 let dividerY;
 
 function preload() {
   function loadImg(path) {
     return loadImage(
       path,
-      () => console.log("Loaded:", path),
-      () => console.error("Failed:", path)
+      () => console.log(`✅ Loaded: ${path}`),
+      err => console.error(`❌ Failed: ${path}`)
     );
   }
 
   // Base
-  otherImages.plainWall = loadImg("images/plainWall.png");
-  otherImages.plainFloor = loadImg("images/plainFloor.png");
+  otherImages.plainWall  = loadImg('images/plainWall.png');
+  otherImages.plainFloor = loadImg('images/plainFloor.png');
 
-  // Floors
-  for (let i = 1; i <= 10; i++) {
-    floorImages.push(loadImg(`images/floorImage${nf(i, 2)}.png`));
-  }
-
-  // Wallpapers
+  // Floors (01–12)
   for (let i = 1; i <= 12; i++) {
-    wallpaperImages.push(loadImg(`images/wallpaperImage${nf(i, 2)}.png`));
+    floorImages.push(
+      loadImg(`images/floorImage${nf(i, 2)}.png`)
+    );
   }
 
-  // Frames
+  // Wallpapers (01–13)
+  for (let i = 1; i <= 13; i++) {
+    wallpaperImages.push(
+      loadImg(`images/wallpaperImage${nf(i, 2)}.png`)
+    );
+  }
+
+  // Frames (01–09)
   for (let i = 1; i <= 9; i++) {
-    frameImages.push(loadImg(`images/frame${nf(i, 2)}.png`));
+    frameImages.push(
+      loadImg(`images/frame${nf(i, 2)}.png`)
+    );
   }
 
-  // Furniture
-  for (let i = 1; i <= 16; i++) {
-    furnitureImages.push(loadImg(`images/furniture${nf(i, 2)}.png`));
+  // Furniture (01–17)
+  for (let i = 1; i <= 17; i++) {
+    furnitureImages.push(
+      loadImg(`images/furniture${nf(i, 2)}.png`)
+    );
   }
 
-  // Beds
+  // Beds (01–05)
   for (let i = 1; i <= 5; i++) {
-    bedImages.push(loadImg(`images/bed${nf(i, 2)}.png`));
+    bedImages.push(
+      loadImg(`images/bed${nf(i, 2)}.png`)
+    );
   }
 
-  // Windows
+  // Windows (01–05)
   otherImages.windows = [];
   for (let i = 1; i <= 5; i++) {
-    otherImages.windows.push(loadImg(`images/niceWindow${nf(i, 2)}.png`));
+    otherImages.windows.push(
+      loadImg(`images/niceWindow${nf(i, 2)}.png`)
+    );
   }
 }
 
 function setup() {
-  const c = createCanvas(900, 600);
-  c.parent(document.body);
-
+  createCanvas(900, 600);
   dividerY = height * 2 / 3;
   noLoop();
-  drawBaseScene();
 }
 
 function draw() {
@@ -85,6 +93,8 @@ function drawBaseScene() {
   noStroke();
 
   for (let d of draggableImages) {
+    if (!d.img) continue;
+
     push();
     translate(d.x + d.w / 2, d.y + d.h / 2);
     rotate(d.rotation);
@@ -93,28 +103,22 @@ function drawBaseScene() {
   }
 }
 
-// ---------- RANDOM IMAGE ----------
+// ---------- IMAGE REVEAL ----------
 function revealRandomImage() {
-  const section = random(["floor", "wallpaper", "other"]);
-  const count = section === "other" ? 1 : 2;
+  const section = random(['floor', 'wallpaper', 'other']);
+  const count = section === 'other' ? 1 : 2;
 
   for (let i = 0; i < count; i++) {
-    let pool = [];
+    let pool =
+      section === 'floor' ? floorImages :
+      section === 'wallpaper' ? wallpaperImages :
+      [...bedImages, ...frameImages, ...furnitureImages, ...otherImages.windows];
 
-    if (section === "floor") pool = floorImages;
-    else if (section === "wallpaper") pool = wallpaperImages;
-    else {
-      pool = [
-        ...bedImages,
-        ...frameImages,
-        ...furnitureImages,
-        ...otherImages.windows
-      ];
+    pool = pool.filter(img => !draggableImages.some(d => d.img === img));
+
+    if (draggableImages.some(d => bedImages.includes(d.img))) {
+      pool = pool.filter(img => !bedImages.includes(img));
     }
-
-    pool = pool.filter(
-      img => !draggableImages.some(d => d.img === img)
-    );
 
     if (pool.length === 0) return;
 
@@ -124,11 +128,9 @@ function revealRandomImage() {
     const h = w * aspect;
 
     let y =
-      floorImages.includes(img)
-        ? random(dividerY + 10, height - h)
-        : wallpaperImages.includes(img)
-        ? random(10, dividerY - h)
-        : random(10, height - h);
+      floorImages.includes(img) ? random(dividerY + 5, height - h) :
+      wallpaperImages.includes(img) ? random(5, dividerY - h) :
+      random(5, height - h);
 
     draggableImages.push({
       img,
@@ -144,20 +146,18 @@ function revealRandomImage() {
   redraw();
 }
 
-// ---------- DRAG ----------
+// ---------- INTERACTION ----------
 function mousePressed() {
   for (let i = draggableImages.length - 1; i >= 0; i--) {
     const d = draggableImages[i];
     if (
-      mouseX > d.x &&
-      mouseX < d.x + d.w &&
-      mouseY > d.y &&
-      mouseY < d.y + d.h
+      mouseX > d.x && mouseX < d.x + d.w &&
+      mouseY > d.y && mouseY < d.y + d.h
     ) {
       selectedImage = d;
       offsetX = mouseX - d.x;
       offsetY = mouseY - d.y;
-      draggableImages.push(draggableImages.splice(i, 1)[0]);
+      draggableImages.push(draggableImages.splice(i,1)[0]);
       loop();
       break;
     }
@@ -166,8 +166,16 @@ function mousePressed() {
 
 function mouseDragged() {
   if (!selectedImage) return;
+
   selectedImage.x = mouseX - offsetX;
   selectedImage.y = mouseY - offsetY;
+
+  if (floorImages.includes(selectedImage.img))
+    selectedImage.y = constrain(selectedImage.y, dividerY + 1, height - selectedImage.h);
+
+  if (wallpaperImages.includes(selectedImage.img))
+    selectedImage.y = constrain(selectedImage.y, 1, dividerY - selectedImage.h);
+
   redraw();
 }
 
@@ -176,76 +184,75 @@ function mouseReleased() {
   noLoop();
 }
 
-// ---------- RESET ----------
+function keyPressed() {
+  if (!selectedImage) return;
+
+  if (key === 'R' || key === 'r') selectedImage.rotation += PI / 8;
+  if (key === 'L' || key === 'l') {
+    selectedImage.w *= 1.1;
+    selectedImage.h = selectedImage.w * selectedImage.aspect;
+  }
+  if (key === 'S' || key === 's') {
+    selectedImage.w *= 0.9;
+    selectedImage.h = selectedImage.w * selectedImage.aspect;
+  }
+
+  redraw();
+}
+
+// ---------- WIX ----------
+window.addEventListener('message', e => {
+  if (!e.data || !e.data.type) return;
+
+  const type = e.data.type;
+
+  if (type === "RESET") resetSketch();
+  if (type === "DOWNLOAD") saveCanvas('room-design', 'png');
+
+  if (["FLOOR", "WALLPAPER", "FURNITURE", "BED", "WINDOW"].includes(type)) {
+    revealByCategory(type);
+  }
+});
+
+function revealByCategory(category) {
+  let pool = [];
+
+  if (category === "FLOOR") pool = floorImages;
+  if (category === "WALLPAPER") pool = wallpaperImages;
+  if (category === "FURNITURE") pool = furnitureImages.concat(frameImages);
+  if (category === "BED") pool = bedImages;
+  if (category === "WINDOW") pool = otherImages.windows;
+
+  // Remove already used images
+  pool = pool.filter(img => !draggableImages.some(d => d.img === img));
+
+  if (pool.length === 0) return;
+
+  const img = random(pool);
+  const aspect = img.height / img.width;
+  const w = 120;
+  const h = w * aspect;
+
+  let y =
+    floorImages.includes(img) ? random(dividerY + 5, height - h) :
+    wallpaperImages.includes(img) ? random(5, dividerY - h) :
+    random(5, height - h);
+
+  draggableImages.push({
+    img,
+    x: random(50, width - w),
+    y,
+    w,
+    h,
+    aspect,
+    rotation: 0
+  });
+
+  redraw();
+}
+
 function resetSketch() {
   draggableImages = [];
   selectedImage = null;
   redraw();
 }
-function revealRandomImageByCategory(category) {
-  let availableImages = [];
-
-  if (category === "BED") {
-    availableImages = bedImages;
-  } else if (category === "FLOOR") {
-    availableImages = floorImages;
-  } else if (category === "FURNITURE") {
-    availableImages = [...furnitureImages, ...frameImages];
-  } else if (category === "WINDOW") {
-    availableImages = otherImages.windows;
-  }
-
-  // Prevent duplicates
-  availableImages = availableImages.filter(
-    img => !draggableImages.some(d => d.img === img)
-  );
-
-  // Only one bed
-  if (category === "BED" &&
-      draggableImages.some(d => bedImages.includes(d.img))) {
-    return;
-  }
-
-  if (availableImages.length === 0) return;
-
-  const img = random(availableImages);
-  const aspect = img.height / img.width;
-
-  const baseWidth = 120;
-  const baseHeight = baseWidth * aspect;
-
-  let x = random(50, width - baseWidth);
-  let y = random(10, height - baseHeight);
-
-  if (floorImages.includes(img)) {
-    y = random(dividerY + 10, height - baseHeight);
-  }
-
-  if (wallpaperImages.includes(img)) {
-    y = random(10, dividerY - baseHeight);
-  }
-
-  draggableImages.push({
-    img
-
-
-window.addEventListener("message", (e) => {
-  if (!e.data || !e.data.type) return;
-
-  const type = e.data.type;
-
-  if (type === "RESET") {
-    resetSketch();
-    return;
-  }
-
-  if (type === "DOWNLOAD") {
-    downloadSketch();
-    return;
-  }
-
-  // Category-based reveal
-  if (["BED", "FLOOR", "FURNITURE", "WINDOW"].includes(type)) {
-    revealRandomImageByCategory(type);
-  }
-});
