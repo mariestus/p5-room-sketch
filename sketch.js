@@ -213,43 +213,63 @@ window.addEventListener('message', e => {
     revealByCategory(type);
   }
 });
-
 function revealByCategory(category) {
   let pool = [];
+  let count = 1; // default
 
-  if (category === "FLOOR") pool = floorImages;
-  if (category === "WALLPAPER") pool = wallpaperImages;
+  if (category === "FLOOR") {
+    pool = floorImages;
+    count = 3;
+  }
+
+  if (category === "WALLPAPER") {
+    pool = wallpaperImages;
+    count = 3;
+  }
+
   if (category === "FURNITURE") pool = furnitureImages.concat(frameImages);
   if (category === "BED") pool = bedImages;
   if (category === "WINDOW") pool = otherImages.windows;
 
-  // Remove already used images
-  pool = pool.filter(img => !draggableImages.some(d => d.img === img));
+  for (let i = 0; i < count; i++) {
+    // Remove already-used images
+    let available = pool.filter(
+      img => !draggableImages.some(d => d.img === img)
+    );
 
-  if (pool.length === 0) return;
+    // Only one bed allowed
+    if (draggableImages.some(d => bedImages.includes(d.img))) {
+      available = available.filter(img => !bedImages.includes(img));
+    }
 
-  const img = random(pool);
-  const aspect = img.height / img.width;
-  const w = 120;
-  const h = w * aspect;
+    if (available.length === 0) return;
 
-  let y =
-    floorImages.includes(img) ? random(dividerY + 5, height - h) :
-    wallpaperImages.includes(img) ? random(5, dividerY - h) :
-    random(5, height - h);
+    const img = random(available);
+    const aspect = img.height / img.width;
+    const w = 120;
+    const h = w * aspect;
 
-  draggableImages.push({
-    img,
-    x: random(50, width - w),
-    y,
-    w,
-    h,
-    aspect,
-    rotation: 0
-  });
+    let y =
+      floorImages.includes(img)
+        ? random(dividerY + 5, height - h)
+        : wallpaperImages.includes(img)
+        ? random(5, dividerY - h)
+        : random(5, height - h);
+
+    draggableImages.push({
+      img,
+      x: random(50, width - w),
+      y,
+      w,
+      h,
+      aspect,
+      rotation: 0
+    });
+  }
 
   redraw();
 }
+
 
 function resetSketch() {
   draggableImages = [];
