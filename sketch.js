@@ -20,46 +20,46 @@ function preload() {
     );
   }
 
-  // Base
+  // room
   otherImages.plainWall  = loadImg('images/plainWall.png');
   otherImages.plainFloor = loadImg('images/plainFloor.png');
 
-  // Floors (01–12)
+  // Floors 1–12
   for (let i = 1; i <= 12; i++) {
     floorImages.push(
       loadImg(`images/floorImage${nf(i, 2)}.png`)
     );
   }
 
-  // Wallpapers (01–13)
+  // Wallpapers 1–13
   for (let i = 1; i <= 13; i++) {
     wallpaperImages.push(
       loadImg(`images/wallpaperImage${nf(i, 2)}.png`)
     );
   }
 
-  // Frames (01–09)
+  // Frames 1–9
   for (let i = 1; i <= 9; i++) {
     frameImages.push(
       loadImg(`images/frame${nf(i, 2)}.png`)
     );
   }
 
-  // Furniture (01–17)
+  // Furniture 1–17
   for (let i = 1; i <= 17; i++) {
     furnitureImages.push(
       loadImg(`images/furniture${nf(i, 2)}.png`)
     );
   }
 
-  // Beds (01–05)
+  // Beds 1–5
   for (let i = 1; i <= 5; i++) {
     bedImages.push(
       loadImg(`images/bed${nf(i, 2)}.png`)
     );
   }
 
-  // Windows (01–05)
+  // Windows 1–5
   otherImages.windows = [];
   for (let i = 1; i <= 5; i++) {
     otherImages.windows.push(
@@ -103,7 +103,42 @@ function drawBaseScene() {
   }
 }
 
-// ---------- IMAGE REVEAL ----------
+function createDraggable(img) {
+  const aspect = img.height / img.width;
+  let w = 120;
+  let h = w * aspect;
+
+  // wall space
+  if (wallpaperImages.includes(img) && h > dividerY - 10) {
+    h = dividerY - 10;
+    w = h / aspect;
+  }
+
+  // floor space
+  if (floorImages.includes(img) && h > height - dividerY - 10) {
+    h = height - dividerY - 10;
+    w = h / aspect;
+  }
+
+  let y =
+    floorImages.includes(img)
+      ? random(dividerY + 5, height - h)
+      : wallpaperImages.includes(img)
+      ? random(5, dividerY - h)
+      : random(5, height - h);
+
+  return {
+    img,
+    x: random(50, width - w),
+    y,
+    w,
+    h,
+    aspect,
+    rotation: 0
+  };
+}
+
+
 function revealRandomImage() {
   const section = random(['floor', 'wallpaper', 'other']);
   const count = section === 'other' ? 1 : 2;
@@ -146,7 +181,7 @@ function revealRandomImage() {
   redraw();
 }
 
-// ---------- INTERACTION ----------
+// mouse functions
 function mousePressed() {
   for (let i = draggableImages.length - 1; i >= 0; i--) {
     const d = draggableImages[i];
@@ -200,7 +235,7 @@ function keyPressed() {
   redraw();
 }
 
-// ---------- WIX ----------
+// wix interactions
 window.addEventListener('message', e => {
   if (!e.data || !e.data.type) return;
 
@@ -215,7 +250,7 @@ window.addEventListener('message', e => {
 });
 function revealByCategory(category) {
   let pool = [];
-  let count = 1; // default
+  let count = 1;
 
   if (category === "FLOOR") {
     pool = floorImages;
@@ -232,43 +267,27 @@ function revealByCategory(category) {
   if (category === "WINDOW") pool = otherImages.windows;
 
   for (let i = 0; i < count; i++) {
-    // Remove already-used images
     let available = pool.filter(
       img => !draggableImages.some(d => d.img === img)
     );
 
-    // Only one bed allowed
-    if (draggableImages.some(d => bedImages.includes(d.img))) {
-      available = available.filter(img => !bedImages.includes(img));
+    // one bed max
+    if (
+      category === "BED" &&
+      draggableImages.some(d => bedImages.includes(d.img))
+    ) {
+      return;
     }
 
     if (available.length === 0) return;
 
     const img = random(available);
-    const aspect = img.height / img.width;
-    const w = 120;
-    const h = w * aspect;
-
-    let y =
-      floorImages.includes(img)
-        ? random(dividerY + 5, height - h)
-        : wallpaperImages.includes(img)
-        ? random(5, dividerY - h)
-        : random(5, height - h);
-
-    draggableImages.push({
-      img,
-      x: random(50, width - w),
-      y,
-      w,
-      h,
-      aspect,
-      rotation: 0
-    });
+    draggableImages.push(createDraggable(img));
   }
 
   redraw();
 }
+
 
 
 function resetSketch() {
