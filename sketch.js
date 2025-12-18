@@ -7,6 +7,8 @@ let bedImages = [];
 let otherImages = { windows: [] };
 let draggableImages = [];
 
+let activeWallpaper = null;
+
 let selectedImage = null;
 let offsetX = 0, offsetY = 0;
 let dividerY;
@@ -81,8 +83,12 @@ function draw() {
 function drawBaseScene() {
   background(220);
 
-  if (otherImages.plainWall)
-    image(otherImages.plainWall, 0, 0, width, dividerY);
+ if (activeWallpaper) {
+  image(activeWallpaper, 0, 0, width, dividerY);
+} else if (otherImages.plainWall) {
+  image(otherImages.plainWall, 0, 0, width, dividerY);
+}
+
 
   if (otherImages.plainFloor)
     image(otherImages.plainFloor, 0, dividerY, width, height - dividerY);
@@ -258,9 +264,17 @@ function revealByCategory(category) {
   }
 
   if (category === "WALLPAPER") {
-    pool = wallpaperImages;
-    count = 3;
-  }
+  let available = wallpaperImages.filter(
+    img => img !== activeWallpaper
+  );
+
+  if (available.length === 0) return;
+
+  activeWallpaper = random(available);
+  redraw();
+  return;
+}
+
 
   if (category === "FURNITURE") pool = furnitureImages.concat(frameImages);
   if (category === "BED") pool = bedImages;
@@ -293,5 +307,7 @@ function revealByCategory(category) {
 function resetSketch() {
   draggableImages = [];
   selectedImage = null;
+  activeWallpaper = null;
   redraw();
+
 }
