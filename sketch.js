@@ -34,11 +34,26 @@ function preload() {
   }
 
   // Wallpapers 1–13
-  for (let i = 1; i <= 13; i++) {
-    wallpaperImages.push(
-      loadImg(`images/wallpaperImage${nf(i, 2)}.png`)
-    );
-  }
+ // Wallpapers (Wix-hosted URLs)
+const wallpaperURLs = [
+  "https://static.wixstatic.com/media/a983c6_586000c420b14b88aa302b7d62293637~mv2.png",
+  "https://static.wixstatic.com/media/a983c6_07a9f01c00784370a81c809ebecf91be~mv2.png",
+  "https://static.wixstatic.com/media/a983c6_69a4e780cb7c45b5870c733ec740c366~mv2.png",
+  "https://static.wixstatic.com/media/a983c6_2609dc4b77fc490387bbcc857dc4cf1b~mv2.png",
+  "https://static.wixstatic.com/media/a983c6_f46b91bd529745d39305e38ed8274aed~mv2.png",
+  "https://static.wixstatic.com/media/a983c6_9519adbdc9e146438fd3c94a22c3fb1f~mv2.png",
+  "https://static.wixstatic.com/media/a983c6_065d370f16f740d09290f0af8f60c447~mv2.png",
+  "https://static.wixstatic.com/media/a983c6_eaed3cf28d9246b6861b2cc0eed58477~mv2.png",
+  "https://static.wixstatic.com/media/a983c6_b4199c014f23481fb8e4fb229fcd812c~mv2.png",
+  "https://static.wixstatic.com/media/a983c6_27444dc769cd4c2a8a7fac2e8d232c92~mv2.png",
+  "https://static.wixstatic.com/media/a983c6_4d2fde74e97a43ab94b6e084e62f7020~mv2.png",
+  "https://static.wixstatic.com/media/a983c6_c5ee332863ec42db852d23b2acbcc903~mv2.png",
+  "https://static.wixstatic.com/media/a983c6_7bae6cd02a42482aad2c274a9dd192ac~mv2.png"
+];
+
+for (let url of wallpaperURLs) {
+  wallpaperImages.push(loadImg(url));
+}
 
   // Frames 1–9
   for (let i = 1; i <= 9; i++) {
