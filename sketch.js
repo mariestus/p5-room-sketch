@@ -74,6 +74,8 @@ function setup() {
   createCanvas(900, 600);
   dividerY = height * 2 / 3;
   noLoop();
+  console.log("Wallpaper count:", wallpaperImages.length);
+
 }
 
 function draw() {
